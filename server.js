@@ -4816,6 +4816,73 @@ function(data, match, end, ask) {
   }
 });
 
+
+// Artifactory version integration
+camp.route(/^\/artifactory\/(.+)\/(.+)\/(.+)\/(.+)\/(.+)\/(svg|png|gif|jpg|json)$/,
+cache(function(data, match, sendBadge, request) {
+  var repository = match[1];
+  var name = match[2];
+  var filter = match[3];
+  var group = match[4];
+  var artifact = match[5];
+  var format = match[6];
+
+  console.error("Query: " + match);
+  console.error("Filter: " + filter);
+
+  var options = {
+    method: 'GET',
+    uri: 'https://artifactory.yojoe.local/artifactory/api/search/versions' 
+      + '?repos=' + repository 
+      + '&g=' + group 
+      + '&a=' + artifact
+  };
+
+  if (serverSecrets && serverSecrets.artifactory_user) {
+    options.auth = {
+      user: serverSecrets.artifactory_user,
+      pass: serverSecrets.artifactory_pass
+    }
+  }
+
+  var badgeData = getBadgeData('artifactory', data);
+  request(options, function(err, res, buffer) {
+    if (err !== null) {
+      badgeData.text[1] = 'inaccessible';
+      sendBadge(format, badgeData);
+      return;
+    }
+    try {
+      var data = JSON.parse(buffer);
+      var filterRegex = new RegExp("^" + filter + "$");
+      var allVersions = data.results
+        .map(function(obj) { return obj.version; });
+      var filteredVersions = allVersions
+        .filter(function(obj) { return filterRegex.test(obj); });
+      var largestVersion = filteredVersions.sort().pop();
+      console.error("All versions: " + allVersions);
+      console.error("Filtered versions: " + filteredVersions);
+      console.error("Largest version: " + largestVersion);
+
+      badgeData.text[1] = largestVersion;
+      badgeData.versionPadding = 10;
+
+      badgeData.text[0] = name;
+      if (name === 'snapshot') {
+          badgeData.colorscheme = 'orange';
+      } else {
+          badgeData.colorscheme = 'brightgreen';
+      }
+
+      sendBadge(format, badgeData);
+    } catch(e) {
+      console.error(e);
+      badgeData.text[1] = 'invalid';
+      sendBadge(format, badgeData);
+    }
+  });
+}));
+
 // Redirect the root to the website.
 camp.route(/^\/$/, function(data, match, end, ask) {
   ask.res.statusCode = 302;

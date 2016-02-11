@@ -77,7 +77,7 @@ function makeImage(data, cb) {
   data.widths = [
     (canvasContext.measureText(data.text[0]).width|0) + 10
       + data.logoWidth + data.logoPadding,
-    (canvasContext.measureText(data.text[1]).width|0) + 10,
+    (canvasContext.measureText(data.text[1]).width|0) + 30 
   ];
   if (data.links === undefined) {
     data.links = ['', ''];
