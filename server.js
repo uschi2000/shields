@@ -4846,7 +4846,6 @@ function(data, match, end, ask) {
   }
 });
 
-
 // Artifactory version integration
 camp.route(/^\/artifactory\/(.+)\/(.+)\/(.+)\/(.+)\/(.+)\/(svg|png|gif|jpg|json)$/,
 cache(function(data, match, sendBadge, request) {
@@ -4862,18 +4861,20 @@ cache(function(data, match, sendBadge, request) {
 
   var options = {
     method: 'GET',
-    uri: 'https://artifactory.yojoe.local/artifactory/api/search/versions' 
+    uri: 'https://artifactory.palantir.build/artifactory/api/search/versions' 
       + '?repos=' + repository 
       + '&g=' + group 
       + '&a=' + artifact
   };
 
-  if (serverSecrets && serverSecrets.artifactory_user) {
-    options.auth = {
-      user: serverSecrets.artifactory_user,
-      pass: serverSecrets.artifactory_pass
-    }
-  }
+  console.error("URL: " + options.uri);
+
+  // if (serverSecrets && serverSecrets.artifactory_user) {
+  //   options.auth = {
+  //     user: serverSecrets.artifactory_user,
+  //     pass: serverSecrets.artifactory_pass
+  //   }
+  // }
 
   var badgeData = getBadgeData('artifactory', data);
   request(options, function(err, res, buffer) {
